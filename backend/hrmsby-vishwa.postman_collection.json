@@ -1,0 +1,1092 @@
+{
+	"info": {
+		"_postman_id": "dayflow-hrms-api-v2",
+		"name": "Dayflow HRMS API - Complete Collection",
+		"description": "Complete API collection for Dayflow HRMS Backend - Organized by Modules",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5001/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tempToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "employeeId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "attendanceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "leaveId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "leaveTypeId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notificationId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login - Step 1: Get OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.tempToken) {",
+									"        pm.collectionVariables.set('tempToken', jsonData.data.tempToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"Admin@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Step 1 of login process. Sends OTP to email and returns tempToken for OTP verification."
+					}
+				},
+				{
+					"name": "Verify OTP - Step 2: Get Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.accessToken) {",
+									"        pm.collectionVariables.set('accessToken', jsonData.data.accessToken);",
+									"    }",
+									"    if (jsonData.data && jsonData.data.user && jsonData.data.user.id) {",
+									"        pm.collectionVariables.set('userId', jsonData.data.user.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tempToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify-otp"]
+						},
+						"description": "Step 2 of login process. Verify OTP using tempToken from Step 1. Returns accessToken and refreshToken."
+					}
+				},
+				{
+					"name": "Register Employee (HR Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@company.com\",\n  \"phone\": \"+919876543210\",\n  \"role\": \"EMPLOYEE\",\n  \"company\": \"Odoo India\",\n  \"department\": \"Engineering\",\n  \"location\": \"Mumbai\",\n  \"dateOfJoining\": \"2025-01-15\",\n  \"monthlyWage\": 50000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "HR only endpoint to register a new employee. Returns loginId and temporary password."
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oldPassword\": \"tempPassword123\",\n  \"newPassword\": \"NewSecurePass@123\",\n  \"confirmPassword\": \"NewSecurePass@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "change-password"]
+						},
+						"description": "Change user password. Requires old password and new password with confirmation."
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@company.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "forgot-password"]
+						},
+						"description": "Send password reset OTP to email address"
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resetToken\": \"your-reset-token-from-email\",\n  \"newPassword\": \"NewSecurePass@123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "reset-password"]
+						},
+						"description": "Reset password using reset token received from forgot password email"
+					}
+				},
+				{
+					"name": "Refresh Access Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"your-refresh-token-here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh-token"]
+						},
+						"description": "Refresh access token using refresh token. Returns new access token."
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/profile/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["profile", "{{userId}}"]
+						},
+						"description": "Get user profile. Employees can only view their own profile, HR can view any profile."
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"+919876543211\",\n  \"address\": \"123 Main Street, Mumbai\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"gender\": \"male\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profile/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["profile", "{{userId}}"]
+						},
+						"description": "Update user profile. Employees can only update limited fields, HR can update more fields."
+					}
+				},
+				{
+					"name": "Upload Profile Picture",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "profilePic",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/profile/{{userId}}/upload-picture",
+							"host": ["{{baseUrl}}"],
+							"path": ["profile", "{{userId}}", "upload-picture"]
+						},
+						"description": "Upload profile picture. Accepts image file."
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard"]
+						},
+						"description": "Get dashboard data. Returns different data based on user role (Employee or HR)."
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Attendance",
+			"item": [
+				{
+					"name": "Check In",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.attendanceId) {",
+									"        pm.collectionVariables.set('attendanceId', jsonData.data.attendanceId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"location\": {\n    \"latitude\": 19.0760,\n    \"longitude\": 72.8777\n  },\n  \"deviceInfo\": \"Chrome on Windows\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/attendance/check-in",
+							"host": ["{{baseUrl}}"],
+							"path": ["attendance", "check-in"]
+						},
+						"description": "Check in for the day. Requires location coordinates."
+					}
+				},
+				{
+					"name": "Check Out",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"attendanceId\": \"{{attendanceId}}\",\n  \"location\": {\n    \"latitude\": 19.0760,\n    \"longitude\": 72.8777\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/attendance/check-out",
+							"host": ["{{baseUrl}}"],
+							"path": ["attendance", "check-out"]
+						},
+						"description": "Check out for the day. Requires attendanceId from check-in and location coordinates."
+					}
+				},
+				{
+					"name": "Get Attendance Records",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/attendance?month=2026-01&year=2026&page=1&limit=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["attendance"],
+							"query": [
+								{
+									"key": "month",
+									"value": "2026-01",
+									"description": "Format: YYYY-MM"
+								},
+								{
+									"key": "year",
+									"value": "2026",
+									"description": "Year (if month not provided)"
+								},
+								{
+									"key": "employeeId",
+									"value": "",
+									"disabled": true,
+									"description": "HR only: Filter by employee ID"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "30"
+								}
+							]
+						},
+						"description": "Get attendance records. Employees see their own records, HR can filter by employeeId."
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Leave Type (HR Only)",
+			"item": [
+				{
+					"name": "Create Leave Type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data._id) {",
+									"        pm.collectionVariables.set('leaveTypeId', jsonData.data._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"SICK LEAVE\",\n  \"maxPerYear\": 12,\n  \"isPaid\": true,\n  \"carryForward\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/leave-type",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave-type"]
+						},
+						"description": "Create a new leave type. HR only."
+					}
+				},
+				{
+					"name": "Get All Leave Types",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/leave-type",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave-type"]
+						},
+						"description": "Get all leave types. HR only."
+					}
+				},
+				{
+					"name": "Get Leave Type By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/leave-type/{{leaveTypeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave-type", "{{leaveTypeId}}"]
+						},
+						"description": "Get leave type by ID. HR only."
+					}
+				},
+				{
+					"name": "Update Leave Type",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"SICK LEAVE\",\n  \"maxPerYear\": 15,\n  \"isPaid\": true,\n  \"carryForward\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/leave-type/{{leaveTypeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave-type", "{{leaveTypeId}}"]
+						},
+						"description": "Update leave type. HR only."
+					}
+				},
+				{
+					"name": "Delete Leave Type",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/leave-type/{{leaveTypeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave-type", "{{leaveTypeId}}"]
+						},
+						"description": "Delete leave type. HR only."
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Leave Management",
+			"item": [
+				{
+					"name": "Apply for Leave",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.leaveId) {",
+									"        pm.collectionVariables.set('leaveId', jsonData.data.leaveId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "leaveTypeId",
+									"value": "{{leaveTypeId}}",
+									"type": "text",
+									"description": "Leave Type ID (get from Leave Type endpoints)"
+								},
+								{
+									"key": "fromDate",
+									"value": "2026-01-10",
+									"type": "text",
+									"description": "Format: YYYY-MM-DD"
+								},
+								{
+									"key": "toDate",
+									"value": "2026-01-12",
+									"type": "text",
+									"description": "Format: YYYY-MM-DD"
+								},
+								{
+									"key": "reason",
+									"value": "Not feeling well",
+									"type": "text"
+								},
+								{
+									"key": "attachment",
+									"type": "file",
+									"src": [],
+									"description": "Optional: Medical certificate or document"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/leave/apply",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave", "apply"]
+						},
+						"description": "Apply for leave. Requires leaveTypeId (get from Leave Type endpoints). Uses fromDate/toDate instead of startDate/endDate."
+					}
+				},
+				{
+					"name": "Get Leave Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/leave?status=PENDING&page=1&limit=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave"],
+							"query": [
+								{
+									"key": "status",
+									"value": "PENDING",
+									"description": "PENDING, APPROVED, REJECTED"
+								},
+								{
+									"key": "employeeId",
+									"value": "",
+									"disabled": true,
+									"description": "HR only: Filter by employee ID"
+								},
+								{
+									"key": "startDate",
+									"value": "",
+									"disabled": true,
+									"description": "Filter by start date"
+								},
+								{
+									"key": "endDate",
+									"value": "",
+									"disabled": true,
+									"description": "Filter by end date"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "30"
+								}
+							]
+						},
+						"description": "Get leave requests. Employees see their own requests, HR can filter by employeeId."
+					}
+				},
+				{
+					"name": "Approve/Reject Leave (HR Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"approve\",\n  \"comments\": \"Approved as per policy\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/leave/{{leaveId}}/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["leave", "{{leaveId}}", "approve"]
+						},
+						"description": "Approve or reject leave request. HR only. Action can be 'approve' or 'reject'."
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Holiday Calendar (HR Only)",
+			"item": [
+				{
+					"name": "Create/Update Holiday Calendar",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"year\": 2026,\n  \"holidays\": [\n    {\n      \"date\": \"2026-01-26\",\n      \"name\": \"Republic Day\",\n      \"type\": \"NATIONAL\"\n    },\n    {\n      \"date\": \"2026-08-15\",\n      \"name\": \"Independence Day\",\n      \"type\": \"NATIONAL\"\n    },\n    {\n      \"date\": \"2026-10-02\",\n      \"name\": \"Gandhi Jayanti\",\n      \"type\": \"NATIONAL\"\n    },\n    {\n      \"date\": \"2026-12-25\",\n      \"name\": \"Christmas\",\n      \"type\": \"OPTIONAL\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/holiday",
+							"host": ["{{baseUrl}}"],
+							"path": ["holiday"]
+						},
+						"description": "Create or update holiday calendar for a year. HR only. Type: NATIONAL or OPTIONAL."
+					}
+				},
+				{
+					"name": "Get All Holiday Calendars",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/holiday/all",
+							"host": ["{{baseUrl}}"],
+							"path": ["holiday", "all"]
+						},
+						"description": "Get all holiday calendars. HR only."
+					}
+				},
+				{
+					"name": "Get Holiday Calendar By Year",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/holiday/2026",
+							"host": ["{{baseUrl}}"],
+							"path": ["holiday", "2026"]
+						},
+						"description": "Get holiday calendar for a specific year. HR only."
+					}
+				},
+				{
+					"name": "Delete Holiday Calendar",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/holiday/2026",
+							"host": ["{{baseUrl}}"],
+							"path": ["holiday", "2026"]
+						},
+						"description": "Delete holiday calendar for a specific year. HR only."
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Payroll",
+			"item": [
+				{
+					"name": "Get Salary Information",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payroll/{{employeeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["payroll", "{{employeeId}}"]
+						},
+						"description": "Get salary information for an employee."
+					}
+				},
+				{
+					"name": "Update Salary Structure (HR Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"monthlyWage\": 75000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payroll/{{employeeId}}/structure",
+							"host": ["{{baseUrl}}"],
+							"path": ["payroll", "{{employeeId}}", "structure"]
+						},
+						"description": "Update salary structure for an employee. HR only."
+					}
+				},
+				{
+					"name": "Generate Payslip",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payroll/{{employeeId}}/payslip?month=01&year=2026",
+							"host": ["{{baseUrl}}"],
+							"path": ["payroll", "{{employeeId}}", "payslip"],
+							"query": [
+								{
+									"key": "month",
+									"value": "01",
+									"description": "Month (01-12)"
+								},
+								{
+									"key": "year",
+									"value": "2026",
+									"description": "Year (YYYY)"
+								}
+							]
+						},
+						"description": "Generate payslip for an employee for a specific month and year."
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Admin (HR Only)",
+			"item": [
+				{
+					"name": "Get All Employees",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/employees?page=1&limit=50",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "employees"],
+							"query": [
+								{
+									"key": "department",
+									"value": "",
+									"disabled": true,
+									"description": "Filter by department"
+								},
+								{
+									"key": "status",
+									"value": "",
+									"disabled": true,
+									"description": "Filter by status"
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true,
+									"description": "Search by name or email"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get all employees with pagination and filters. HR only."
+					}
+				},
+				{
+					"name": "Update Employee Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"INACTIVE\",\n  \"reason\": \"Employee resigned\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/employees/{{employeeId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "employees", "{{employeeId}}", "status"]
+						},
+						"description": "Update employee status. HR only."
+					}
+				}
+			]
+		},
+		{
+			"name": "10. Notifications",
+			"item": [
+				{
+					"name": "Get Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.notifications && jsonData.data.notifications.length > 0) {",
+									"        pm.collectionVariables.set('notificationId', jsonData.data.notifications[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "unreadOnly",
+									"value": "",
+									"disabled": true,
+									"description": "true/false - Filter unread notifications"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"disabled": true,
+									"description": "Filter by notification type"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get notifications for the authenticated user."
+					}
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications", "{{notificationId}}", "read"]
+						},
+						"description": "Mark a notification as read."
+					}
+				}
+			]
+		},
+		{
+			"name": "11. Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:5001/health",
+					"protocol": "http",
+					"host": ["localhost"],
+					"port": "5001",
+					"path": ["health"]
+				},
+				"description": "Health check endpoint to verify server is running."
+			}
+		}
+	]
+}
