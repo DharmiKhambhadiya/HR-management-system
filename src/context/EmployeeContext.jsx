@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
 
 /**
  * EmployeeContext
@@ -9,7 +9,7 @@ const EmployeeContext = createContext(null);
 export const useEmployee = () => {
   const context = useContext(EmployeeContext);
   if (!context) {
-    throw new Error('useEmployee must be used within EmployeeProvider');
+    throw new Error("useEmployee must be used within EmployeeProvider");
   }
   return context;
 };
@@ -19,13 +19,13 @@ export const EmployeeProvider = ({ children }) => {
 
   // Load employees from localStorage on mount
   useEffect(() => {
-    const storedEmployees = localStorage.getItem('employees');
+    const storedEmployees = localStorage.getItem("employees");
     if (storedEmployees) {
       try {
         setEmployees(JSON.parse(storedEmployees));
       } catch (error) {
-        console.error('Error parsing stored employees:', error);
-        localStorage.removeItem('employees');
+        console.error("Error parsing stored employees:", error);
+        localStorage.removeItem("employees");
       }
     }
   }, []);
@@ -35,8 +35,9 @@ export const EmployeeProvider = ({ children }) => {
     try {
       // Generate password (8 random alphanumeric characters)
       const generatePassword = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let password = '';
+        const chars =
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let password = "";
         for (let i = 0; i < 8; i++) {
           password += chars.charAt(Math.floor(Math.random() * chars.length));
         }
@@ -55,17 +56,17 @@ export const EmployeeProvider = ({ children }) => {
         dateOfJoining: employeeData.dateOfJoining,
         jobTitle: employeeData.jobTitle,
         department: employeeData.department,
-        reportingManager: employeeData.reportingManager || '',
+        reportingManager: employeeData.reportingManager || "",
         baseSalary: employeeData.baseSalary || 0,
         password: password,
         isFirstLogin: true,
-        status: 'Active',
+        status: "Active",
         createdAt: new Date().toISOString(),
       };
 
       // Save to localStorage (in real app, this would be API call)
       const updatedEmployees = [...employees, newEmployee];
-      localStorage.setItem('employees', JSON.stringify(updatedEmployees));
+      localStorage.setItem("employees", JSON.stringify(updatedEmployees));
       setEmployees(updatedEmployees);
 
       return {
@@ -74,7 +75,7 @@ export const EmployeeProvider = ({ children }) => {
         password: password, // Return password for display
       };
     } catch (error) {
-      throw new Error('Failed to create employee');
+      throw new Error("Failed to create employee");
     }
   };
 
@@ -88,15 +89,33 @@ export const EmployeeProvider = ({ children }) => {
     return employees.find((emp) => emp.id === id);
   };
 
+  // Update employee by id (partial changes)
+  const updateEmployeeById = async (id, changes) => {
+    const idx = employees.findIndex((e) => e.id === id);
+    if (idx === -1) throw new Error("Employee not found");
+    const updated = {
+      ...employees[idx],
+      ...changes,
+      updatedAt: new Date().toISOString(),
+    };
+    const updatedEmployees = [...employees];
+    updatedEmployees[idx] = updated;
+    localStorage.setItem("employees", JSON.stringify(updatedEmployees));
+    setEmployees(updatedEmployees);
+    return { success: true, employee: updated };
+  };
+
   const value = {
     employees,
     createEmployee,
     getEmployees,
     getEmployeeById,
+    updateEmployeeById,
   };
 
   return (
-    <EmployeeContext.Provider value={value}>{children}</EmployeeContext.Provider>
+    <EmployeeContext.Provider value={value}>
+      {children}
+    </EmployeeContext.Provider>
   );
 };
-

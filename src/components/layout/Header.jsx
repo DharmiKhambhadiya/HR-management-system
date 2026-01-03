@@ -15,7 +15,7 @@ const Header = () => {
 
   const handleLogout = () => {
     signOut();
-    navigate("/dashboard");
+    navigate("/auth/signin");
     setIsProfileOpen(false);
   };
 
@@ -35,10 +35,10 @@ const Header = () => {
             aria-label="User profile menu"
             aria-expanded={isProfileOpen}
           >
-            {employeeData.avatar ? (
+            {user?.avatar ? (
               <img
-                src={employeeData.avatar}
-                alt={employeeData.name}
+                src={user.avatar}
+                alt={user.fullName || user.firstName || "User"}
                 className="w-8 h-8 rounded-full"
               />
             ) : (
@@ -49,7 +49,7 @@ const Header = () => {
                 {user?.fullName || user?.firstName || "User"}
               </p>
               <p className="text-xs text-gray-500">
-                {user?.role === "admin"
+                {user?.role === "ADMIN"
                   ? "Admin"
                   : user?.department || "Employee"}
               </p>
@@ -83,7 +83,8 @@ const Header = () => {
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     onClick={() => {
                       setIsProfileOpen(false);
-                      // Navigate to profile page
+                      if (user?.role === "ADMIN") navigate("/admin/dashboard");
+                      else navigate("/profile");
                     }}
                   >
                     View Profile
