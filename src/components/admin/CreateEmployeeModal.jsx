@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { HiClipboard, HiCheckCircle } from 'react-icons/hi2';
-import Modal from '../common/Modal';
-import FormInput from '../common/FormInput';
-import FormSelect from '../common/FormSelect';
-import { generateEmployeeId } from '../../utils/employeeIdGenerator';
-import { useEmployee } from '../../context/EmployeeContext';
+import { useState, useEffect } from "react";
+import { HiClipboard, HiCheckCircle } from "react-icons/hi2";
+import Modal from "../common/Modal";
+import FormInput from "../common/FormInput";
+import FormSelect from "../common/FormSelect";
+import { generateEmployeeId } from "../../utils/employeeIdGenerator";
+import { useEmployee } from "../../context/EmployeeContext";
 
 /**
  * CreateEmployeeModal Component
@@ -13,36 +13,35 @@ import { useEmployee } from '../../context/EmployeeContext';
 const CreateEmployeeModal = ({ isOpen, onClose }) => {
   const { createEmployee } = useEmployee();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    companyName: '',
-    dateOfJoining: '',
-    jobTitle: '',
-    department: '',
-    reportingManager: '',
-    baseSalary: '',
+    firstName: "",
+    lastName: "",
+    companyName: "",
+    dateOfJoining: "",
+    jobTitle: "",
+    department: "",
+    reportingManager: "",
+    baseSalary: "",
   });
   const [errors, setErrors] = useState({});
-  const [generatedEmployeeId, setGeneratedEmployeeId] = useState('');
-  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [generatedEmployeeId, setGeneratedEmployeeId] = useState("");
   const [isEmployeeCreated, setIsEmployeeCreated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset form when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
       setFormData({
-        firstName: '',
-        lastName: '',
-        companyName: '',
-        dateOfJoining: '',
-        jobTitle: '',
-        department: '',
-        reportingManager: '',
-        baseSalary: '',
+        firstName: "",
+        lastName: "",
+        companyName: "",
+        dateOfJoining: "",
+        jobTitle: "",
+        department: "",
+        reportingManager: "",
+        baseSalary: "",
       });
       setErrors({});
-      setGeneratedEmployeeId('');
-      setGeneratedPassword('');
+      setGeneratedEmployeeId("");
       setIsEmployeeCreated(false);
     }
   }, [isOpen]);
@@ -57,7 +56,7 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: '',
+        [name]: "",
       }));
     }
   };
@@ -66,50 +65,47 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
     const newErrors = {};
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = "First name is required";
     }
 
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = "Last name is required";
     }
 
     if (!formData.companyName.trim()) {
-      newErrors.companyName = 'Company name is required';
+      newErrors.companyName = "Company name is required";
     }
 
     if (!formData.dateOfJoining) {
-      newErrors.dateOfJoining = 'Date of joining is required';
+      newErrors.dateOfJoining = "Date of joining is required";
     }
 
     if (!formData.jobTitle.trim()) {
-      newErrors.jobTitle = 'Job title is required';
+      newErrors.jobTitle = "Job title is required";
     }
 
     if (!formData.department.trim()) {
-      newErrors.department = 'Department is required';
+      newErrors.department = "Department is required";
     }
 
     if (formData.baseSalary && isNaN(formData.baseSalary)) {
-      newErrors.baseSalary = 'Base salary must be a valid number';
+      newErrors.baseSalary = "Base salary must be a valid number";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let password = '';
-    for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  };
-
   const handleGenerateEmployeeId = () => {
-    if (!formData.firstName || !formData.lastName || !formData.companyName || !formData.dateOfJoining) {
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.companyName ||
+      !formData.dateOfJoining
+    ) {
       setErrors({
-        generate: 'Please fill in First Name, Last Name, Company Name, and Date of Joining first',
+        generate:
+          "Please fill in First Name, Last Name, Company Name, and Date of Joining first",
       });
       return;
     }
@@ -119,7 +115,7 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
 
     // Get next serial number (in real app, this would come from API/database)
     // For now, use existing employees count + 1
-    const employees = JSON.parse(localStorage.getItem('employees') || '[]');
+    const employees = JSON.parse(localStorage.getItem("employees") || "[]");
     const yearEmployees = employees.filter(
       (emp) => new Date(emp.dateOfJoining).getFullYear() === year
     );
@@ -133,13 +129,10 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
       serialNumber
     );
 
-    const password = generatePassword();
-
+    // Password rule: Employee ID is the password
     setGeneratedEmployeeId(employeeId);
-    setGeneratedPassword(password);
     setErrors({});
   };
-
   const handleCopyEmployeeId = () => {
     navigator.clipboard.writeText(generatedEmployeeId);
     // Show success message (you can add a toast notification here)
@@ -153,41 +146,51 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
     }
 
     if (!generatedEmployeeId) {
-      setErrors({ submit: 'Please generate Employee ID first' });
+      setErrors({ submit: "Please generate Employee ID first" });
       return;
     }
 
     try {
+      setIsSubmitting(true);
       const result = await createEmployee({
         ...formData,
         employeeId: generatedEmployeeId,
-        password: generatedPassword,
+        password: generatedEmployeeId, // Employee ID will be used as password per rules
       });
 
       setIsEmployeeCreated(true);
-      
+
       // Auto-close after 6 seconds to allow admin to copy credentials
       setTimeout(() => {
         onClose();
         setIsEmployeeCreated(false);
       }, 6000);
     } catch (error) {
-      setErrors({ submit: error.message || 'Error creating employee. Please try again.' });
-      console.error('Create employee error:', error);
+      setErrors({
+        submit: error.message || "Error creating employee. Please try again.",
+      });
+      console.error("Create employee error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const departmentOptions = [
-    { value: 'Engineering', label: 'Engineering' },
-    { value: 'Marketing', label: 'Marketing' },
-    { value: 'Sales', label: 'Sales' },
-    { value: 'HR', label: 'HR' },
-    { value: 'Finance', label: 'Finance' },
-    { value: 'Operations', label: 'Operations' },
+    { value: "Engineering", label: "Engineering" },
+    { value: "Marketing", label: "Marketing" },
+    { value: "Sales", label: "Sales" },
+    { value: "HR", label: "HR" },
+    { value: "Finance", label: "Finance" },
+    { value: "Operations", label: "Operations" },
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Employee" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create New Employee"
+      size="lg"
+    >
       {isEmployeeCreated ? (
         <div className="text-center py-8">
           <HiCheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
@@ -196,13 +199,17 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
           </h3>
           <div className="space-y-3">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Employee ID (Username)</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Employee ID (Username)
+              </p>
               <div className="flex items-center justify-center gap-2">
                 <code className="text-lg font-mono font-bold text-blue-600 bg-white px-4 py-2 rounded border border-blue-300">
                   {generatedEmployeeId}
                 </code>
                 <button
-                  onClick={() => navigator.clipboard.writeText(generatedEmployeeId)}
+                  onClick={() =>
+                    navigator.clipboard.writeText(generatedEmployeeId)
+                  }
                   className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                   title="Copy Employee ID"
                 >
@@ -214,10 +221,12 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
               <p className="text-sm font-medium text-gray-700 mb-2">Password</p>
               <div className="flex items-center justify-center gap-2">
                 <code className="text-lg font-mono font-bold text-green-600 bg-white px-4 py-2 rounded border border-green-300">
-                  {generatedPassword}
+                  {generatedEmployeeId}
                 </code>
                 <button
-                  onClick={() => navigator.clipboard.writeText(generatedPassword)}
+                  onClick={() =>
+                    navigator.clipboard.writeText(generatedEmployeeId)
+                  }
                   className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                   title="Copy Password"
                 >
@@ -226,7 +235,8 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
               </div>
             </div>
             <p className="text-sm text-gray-600 mt-4">
-              Share these credentials securely with the employee. They must change the password on first login.
+              Share these credentials securely with the employee. They must
+              change the password on first login.
             </p>
           </div>
         </div>
@@ -335,17 +345,21 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Employee ID and Password Generation */}
-            {generatedEmployeeId && generatedPassword && (
+            {generatedEmployeeId && (
               <div className="space-y-3">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Generated Employee ID</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Generated Employee ID
+                  </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 text-lg font-mono font-bold text-blue-600 bg-white px-4 py-2 rounded border border-blue-300">
                       {generatedEmployeeId}
                     </code>
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(generatedEmployeeId)}
+                      onClick={() =>
+                        navigator.clipboard.writeText(generatedEmployeeId)
+                      }
                       className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                       title="Copy Employee ID"
                     >
@@ -357,14 +371,18 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
                   </p>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Generated Password</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Password (same as Employee ID)
+                  </p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 text-lg font-mono font-bold text-green-600 bg-white px-4 py-2 rounded border border-green-300">
-                      {generatedPassword}
+                      {generatedEmployeeId}
                     </code>
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(generatedPassword)}
+                      onClick={() =>
+                        navigator.clipboard.writeText(generatedEmployeeId)
+                      }
                       className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                       title="Copy Password"
                     >
@@ -409,10 +427,10 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
                 </button>
                 <button
                   type="submit"
-                  disabled={!generatedEmployeeId}
+                  disabled={!generatedEmployeeId || isSubmitting}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Employee
+                  {isSubmitting ? "Creating..." : "Create Employee"}
                 </button>
               </div>
             </div>
@@ -424,4 +442,3 @@ const CreateEmployeeModal = ({ isOpen, onClose }) => {
 };
 
 export default CreateEmployeeModal;
-

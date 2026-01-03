@@ -1,5 +1,6 @@
 import { BrowserRouter } from "react-router-dom";
 import { EmployeeProvider } from "./context/EmployeeContext";
+import { AuthProvider } from "./context/AuthContext";
 import AppRouter from "./router/AppRouter";
 
 /**
@@ -10,9 +11,11 @@ import AppRouter from "./router/AppRouter";
 function App() {
   return (
     <BrowserRouter>
-      <EmployeeProvider>
-        <AppRouter />
-      </EmployeeProvider>
+      <AuthProvider>
+        <EmployeeProvider>
+          <AppRouter />
+        </EmployeeProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
