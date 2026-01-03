@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dev_dharmi",
+    "dev_hari",
+    "main"
+  ],
+  "parent": {
+    "dev_dharmi": "main",
+    "dev_hari": "main",
+    "main": null
+  },
+  "order": [
+    "main",
+    "dev_dharmi",
+    "dev_hari"
+  ]
+}
